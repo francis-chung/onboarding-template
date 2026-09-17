@@ -16,7 +16,7 @@ private:
   std::size_t rows_;
   std::size_t cols_;
   std::size_t stride_;
-  std::vector<double> grid_;
+  std::vector<double> grid_; // grid compacted to 1D for fast contiguous memory lookup
 
 public:
   Grid(std::size_t rows, std::size_t cols);
@@ -75,10 +75,7 @@ void apply_stencil(const Grid& old_grid, Grid& new_grid) {
   const size_t cols = old_grid.getCols();
   const size_t stride = old_grid.getStride();
 
-  for (size_t i = 0; i < rows; ++i) {
-    new_grid(i, 0) = old_grid(i, 0);
-    new_grid(i, cols-1) = old_grid(i, cols-1);
-  }
+  // row boundaries merged into heat diffusion block
   for (size_t j = 0; j < cols; ++j) {
     new_grid(0, j) = old_grid(0, j);
     new_grid(rows-1, j) = old_grid(rows-1, j);
@@ -99,6 +96,10 @@ void apply_stencil(const Grid& old_grid, Grid& new_grid) {
     const double* old_current = old + i * dist;
     const double* old_below = old + (i+1) * dist;
     double* output = next + i * dist;
+
+    // left/right boundaries
+    output[0] = old_current[0];
+    output[cols-1] = old_current[cols-1];
 
     // allows CPU to perform same instruction to multiple data points
     #pragma omp simd
