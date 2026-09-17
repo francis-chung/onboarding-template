@@ -16,7 +16,7 @@ private:
   std::size_t rows_;
   std::size_t cols_;
   std::size_t stride_;
-  std::vector<double> grid_;
+  std::vector<double> grid_; // grid compacted to 1D for fast contiguous memory lookup
 
 public:
   Grid(std::size_t rows, std::size_t cols);
